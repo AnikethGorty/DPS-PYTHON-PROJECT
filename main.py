@@ -1,0 +1,112 @@
+import sys
+
+import pygame
+import random
+from random import randint
+
+pygame.init()
+screen=pygame.display.set_mode((640,640))
+begin=True
+
+color=(0,45,98)
+BLACK=(0,0,0)
+WHITE=(250,250,250)
+RED=(255,0,0)
+GREEN=(0,128,0)
+
+font_style = pygame.font.Font("freesansbold.ttf", 25)
+score_font = pygame.font.Font("freesansbold.ttf", 35)
+
+def drawGrid():
+    blockSize = 40 #Set the size of the grid block
+    for x in range(0, 640, blockSize):
+        for y in range(0, 640, blockSize):
+            rect = pygame.Rect(x, y, blockSize, blockSize)
+            pygame.draw.rect(screen, BLACK, rect, 1)
+
+def message(msg, color):
+    mesg = font_style.render(msg, True, color)
+    screen.blit(mesg, [640/ 6, 640/3])
+
+def gameloop(begin):
+    num=0
+    screen.fill((200, 255, 255))
+    gameover=False
+    gameclose=False
+
+    start = 0
+    lis = []
+    minexlis=[]
+    mineylis=[]
+    for i in range(0, 17):
+        lis.append(start)
+        start += 40
+    for i in range(0,40):
+        minexlis.append((random.choice(lis),random.choice(lis)))
+
+    print(lis)
+    print(mineylis)
+    print(minexlis)
+    while begin:
+        mousex,mousey=pygame.mouse.get_pos()
+        drawGrid()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+               begin=False
+            #clicking mechanism, print k is placeholder.
+            if event.type==pygame.MOUSEBUTTONUP:
+                bomb=False
+                for i in minexlis:
+                    if (i[0] - 40 <= mousex and i[0] + 40 >= mousex) and (i[1] - 40 <= mousey and i[1] + 40 >= mousey):
+                        bomb = True
+                        print("Boom", (mousex, mousey))
+                        playrect = pygame.Rect(i[0]-40, i[1]-40, 40, 40)
+                        pygame.draw.rect(screen, RED, playrect, 6)
+                if bomb==True:
+                    gameover=True
+                    for i in  minexlis:
+                        redrect=pygame.Rect(i[0],i[1],40,40)
+                        pygame.draw.rect(screen, RED, redrect, 6)
+
+                else:
+                    for i in lis:
+                        if (i-40<=mousex and i+40>=mousex):
+                            a=i
+                        if (i - 40 <= mousey and i + 40 >= mousey):
+                            b=i
+                    playrect = pygame.Rect(a-40, b-40, 40, 40)
+                    pygame.draw.rect(screen, GREEN, playrect, 6)
+                    num+=1
+            if gameover == True:
+                message(("Press C to Play Again or Quit"),RED)
+                pygame.display.update()
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_q:
+                            begin=False
+                        if event.key == pygame.K_c:
+                            gameloop(begin)
+
+        pygame.display.update()
+
+
+
+
+
+
+
+
+
+
+
+
+gameloop(begin)
+
+
+
+
+
+
+
+
+
