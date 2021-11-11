@@ -1,171 +1,105 @@
-# import required modules
-import turtle
-import time
+import sys
+
+import pygame
 import random
+from random import randint
 
-delay = 0.1
-score = 0
-high_score = 0
-level=1
+pygame.init()
+screen=pygame.display.set_mode((1200,800))
+begin=True
 
-# Creating a window screen
-wn = turtle.Screen()
-wn.title("Snake Game")
-wn.bgcolor("blue")
-# the width and height can be put as user's choice
-wn.setup(width=600, height=600)
-wn.tracer(0)
+color=(0,45,98)
+BLACK=(0,0,0)
+WHITE=(250,250,250)
+RED=(255,0,0)
+GREEN=(0,128,0)
 
-# head of the snake
-head = turtle.Turtle()
-head.shape("square")
-head.color("white")
-head.penup()
-head.goto(0, 0)
-head.direction = "Stop"
+font_style = pygame.font.Font("freesansbold.ttf", 25)
+score_font = pygame.font.Font("freesansbold.ttf", 35)
 
-# food in the game
-food = turtle.Turtle()
-colors = random.choice([ 'green', 'black'])
-shapes = random.choice(['square', 'triangle', 'circle'])
-food.speed(0)
-food.shape(shapes)
-food.color(colors)
-food.penup()
-food.goto(0, 100)
+def drawGrid():
+    blockSize = 40 #Set the size of the grid block
+    for x in range(0, 1200, blockSize):
+        for y in range(0, 800, blockSize):
+            rect = pygame.Rect(x, y, blockSize, blockSize)
+            pygame.draw.rect(screen, BLACK, rect, 1)
 
-#obstacles
-obs=turtle.Turtle()
-obs.color('red')
-obs.shape('square')
+def message(msg, color):
+    mesg = font_style.render(msg, True, color)
+    screen.blit(mesg, [640/ 6, 640/3])
 
+def gameloop(begin):
+    num=0
+    screen.fill((200, 255, 255))
+    gameover=False
+    gameclose=False
 
+    start = 0
+    lis = []
+    minexlis=[]
+    mineylis=[]
+    for i in range(0, 17):
+        lis.append(start)
+        start += 40
+    for i in range(0,40):
+        minexlis.append((random.choice(lis),random.choice(lis)))
 
-pen = turtle.Turtle()
-pen.speed(0)
-pen.shape("square")
-pen.color("white")
-pen.penup()
-pen.hideturtle()
-pen.goto(0, 250)
-pen.write("Score : 0  High Score : 0  Level : 1" , align="center",
-          font=("candara", 24, "bold"))
+    print(lis)
+    print(mineylis)
+    print(minexlis)
+    while begin:
+        mousex,mousey=pygame.mouse.get_pos()
+        drawGrid()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+               begin=False
+            #clicking mechanism, print k is placeholder.
+            if event.type==pygame.MOUSEBUTTONUP:
+                bomb=False
+                for i in minexlis:
+                    if (i[0] - 40 <= mousex and i[0] + 40 >= mousex) and (i[1] - 40 <= mousey and i[1] + 40 >= mousey):
+                        bomb = True
+                        print("Boom", (mousex, mousey))
+                        playrect = pygame.Rect(i[0]-40, i[1]-40, 40, 40)
+                        pygame.draw.rect(screen, RED, playrect, 6)
+                if bomb==True:
+                    gameover=True
+                    for i in  minexlis:
+                        redrect=pygame.Rect(i[0],i[1],40,40)
+                        pygame.draw.rect(screen, RED, redrect, 6)
 
+                else:
+                    for i in lis:
+                        if (i-40<=mousex and i+40>=mousex):
+                            a=i
+                        if (i - 40 <= mousey and i + 40 >= mousey):
+                            b=i
+                    playrect = pygame.Rect(a-40, b-40, 40, 40)
+                    pygame.draw.rect(screen, GREEN, playrect, 6)
+                    num+=1
+            if gameover == True:
+                message(("Press C to Play Again or Quit"),RED)
+                pygame.display.update()
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_q:
+                            begin=False
+                        if event.key == pygame.K_c:
+                            gameloop(begin)
 
-# assigning key directions
-def goup():
-    if head.direction != "down":
-        head.direction = "up"
-
-
-def godown():
-    if head.direction != "up":
-        head.direction = "down"
-
-
-def goleft():
-    if head.direction != "right":
-        head.direction = "left"
-
-
-def goright():
-    if head.direction != "left":
-        head.direction = "right"
-
-
-def move():
-    if head.direction == "up":
-        y = head.ycor()
-        head.sety(y + 20)
-    if head.direction == "down":
-        y = head.ycor()
-        head.sety(y - 20)
-    if head.direction == "left":
-        x = head.xcor()
-        head.setx(x - 20)
-    if head.direction == "right":
-        x = head.xcor()
-        head.setx(x + 20)
-
-
-wn.listen()
-wn.onkeypress(goup, "Up")
-wn.onkeypress(godown, "Down")
-wn.onkeypress(goleft, "Left")
-wn.onkeypress(goright, "Right")
-
-segments = []
-
-# Main Gameplay
-while True:
-    wn.update()
-    if head.xcor() > 290 or head.xcor() < -290 or head.ycor() > 290 or head.ycor() < -290:
-        time.sleep(1)
-        head.goto(0, 0)
-        head.direction = "Stop"
-        colors = random.choice(['red', 'blue', 'green'])
-        shapes = random.choice(['square', 'circle'])
-        for segment in segments:
-            segment.goto(1000, 1000)
-        segments.clear()
-        score = 0
-        delay = 0.1
-        pen.clear()
-        pen.write("Score : {} High Score : {} Level : {}".format(
-            score, high_score, level), align="center", font=("candara", 24, "bold"))
-    if head.distance(food) < 20:
-        x = random.randint(-270, 270)
-        y = random.randint(-270, 270)
-        food.goto(x, y)
-
-        # Adding segment
-        new_segment = turtle.Turtle()
-        new_segment.speed(0)
-        new_segment.shape("square")
-        new_segment.color("orange")  # tail colour
-        new_segment.penup()
-        segments.append(new_segment)
-        delay -= 0.001
-        score += 10
-        if score > high_score:
-            high_score = score
-        if score>=100 and score%100==0:
-            level+=1
-            delay/=2
-        elif score<100:
-            level=1
-            delay=0.1
-        pen.clear()
-        pen.write("Score : {} High Score : {} Level : {}".format(
-            score, high_score,level), align="center", font=("candara", 24, "bold"))
-    # Checking for head collisions with body segments
-    for index in range(len(segments) - 1, 0, -1):
-        x = segments[index - 1].xcor()
-        y = segments[index - 1].ycor()
-        segments[index].goto(x, y)
-    if len(segments) > 0:
-        x = head.xcor()
-        y = head.ycor()
-        segments[0].goto(x, y)
-    move()
-    for segment in segments:
-        if segment.distance(head) < 20:
-            time.sleep(1)
-            head.goto(0, 0)
-            head.direction = "stop"
-            colors = random.choice(['red', 'blue', 'green'])
-            shapes = random.choice(['square', 'circle'])
-            for segment in segments:
-                segment.goto(1000, 1000)
-            segment.clear()
-
-            score = 0
-            delay = 0.1
-            level = 1
-            pen.clear()
-            pen.write("Score : {} High Score : {} Level : {} ".format(
-                score, high_score, level), align="center", font=("candara", 24, "bold"))
-    time.sleep(delay)
+        pygame.display.update()
 
 
-wn.mainloop()
+
+
+
+
+
+
+
+
+
+
+gameloop(begin)
+
+
